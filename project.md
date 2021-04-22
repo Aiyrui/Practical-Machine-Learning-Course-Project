@@ -1,7 +1,6 @@
 ---
 title: "PML Course Project"
 author: "Aiyrui"
-date: "4/20/2021"
 output: html_document
 ---
 
