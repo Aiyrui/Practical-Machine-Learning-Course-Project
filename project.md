@@ -150,7 +150,7 @@ Random Forest model has an **accuracy of 99%**.
 
 ## Conclusion
 
-Predicting with random forest has an accuracy of approximately 99% so we'll use the Random Forest algorithm for prediction with testing set. Accuracy is the proportion of correctly classified observations in the training set, then 1 - Accuracy = error rate. We can assume that they're the expected accuracy and out of sample error in the test data. Therefore, 1 - Expected Accuracy = Expected Out of Sample Error, In the case of our prediction model with Random Forest, the **expected out of sample error is 1%**.
+Predicting with random forest has an accuracy of approximately 99% so we'll use the Random Forest algorithm for prediction with testing set. We have 1 - Accuracy = error rate, so we can assume that they're the expected accuracy and out of sample error in the test data. Therefore, 1 - Expected Accuracy = Expected Out of Sample Error, In the case of our prediction model with Random Forest, the **expected out of sample error is 0.624522% **.
 
 ## Prediction with test data
 
