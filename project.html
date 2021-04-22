@@ -170,7 +170,6 @@ pre code {
 </div>
 
 
-<p><code>{r setup, include=FALSE} knitr::opts_chunk$set(echo = TRUE)</code></p>
 <div id="summary" class="section level2">
 <h2>Summary</h2>
 <p>Using the data from: <a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a>, we’ll attempt to predict the manner in which people did their exercise. This is done using the “classe” variable in the training data We’ll be approaching it using tree algorithms such as a Decision Tree and Random Forest on the training set, and compare their accuracy to find which machine learning algorithm does a better prediction. The final prediction model found from the training data will be used to predict the test data.</p>
@@ -181,17 +180,18 @@ pre code {
 </div>
 <div id="setting-up-environment" class="section level2">
 <h2>Setting up Environment</h2>
-<p>```{r libraries, message=FALSE, warning=FALSE} library(caret) library(randomForest) library(rpart) library(rattle)</p>
-</div>
-<div id="set-seed" class="section level1">
-<h1>Set seed</h1>
-<p>set.seed(32343)</p>
-<pre><code>
-## Data Processing and Cleansing
+<pre class="r"><code>library(caret)
+library(randomForest)
+library(rpart)
+library(rattle)
 
-Downloading the necessary data sets into working directory and assigned to their appropriate files and objects.
-```{r download}
-if(!file.exists(&quot;trainingSet.csv&quot;)){
+# Set seed
+set.seed(32343)</code></pre>
+</div>
+<div id="data-processing-and-cleansing" class="section level2">
+<h2>Data Processing and Cleansing</h2>
+<p>Downloading the necessary data sets into working directory and assigned to their appropriate files and objects.</p>
+<pre class="r"><code>if(!file.exists(&quot;trainingSet.csv&quot;)){
     urlTrain &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;
     filename &lt;- &quot;trainingSet.csv&quot;
     download.file(urlTrain, filename)
@@ -209,61 +209,67 @@ if(!exists(&quot;orgiTrain&quot;)){
 
 if(!exists(&quot;orgiTest&quot;)){
     orgiTest &lt;- read.csv(&quot;testingSet.csv&quot;, na.strings = c(&quot;&quot;, &quot;NA&quot;, &quot;#DIV/0!&quot;))
-}
-</code></pre>
-<p>We’ll be removing variables that has zero covariates, NA’s, and irrelevant variables (first 7). ```{r cleansing} # Remove variables that has near zero covariates nearZero &lt;- nearZeroVar(orgiTrain) subTrain &lt;- orgiTrain[, -nearZero]</p>
-<p>nearZeroTest &lt;- nearZeroVar(orgiTest) subTest &lt;- orgiTest[, -nearZeroTest]</p>
-</div>
-<div id="remove-columns-that-has-nas" class="section level1">
-<h1>Remove columns that has NA’s</h1>
-<p>noNACol &lt;- colSums(is.na(subTrain)) == 0 subTrain &lt;- subTrain[, noNACol] ## dim(subTrain)</p>
-<p>noNAColTest &lt;- colSums(is.na(subTest)) == 0 subTest &lt;- subTest[, noNAColTest]</p>
-<pre><code>
-```{r, echo=FALSE}
+}</code></pre>
+<p>We’ll be removing variables that has zero covariates, NA’s, and irrelevant variables (first 7).</p>
+<pre class="r"><code># Remove variables that has near zero covariates
+nearZero &lt;- nearZeroVar(orgiTrain)
+subTrain &lt;- orgiTrain[, -nearZero]
 
-paste(&quot;Irrelevant Variable:&quot;, names(orgiTrain)[1:7])
-</code></pre>
-<p>```{r subset} subTrain &lt;- subTrain[, 8:59]</p>
-</div>
-<div id="exploratory-analysis-on-classe-variable" class="section level1">
-<h1>Exploratory analysis on ‘classe’ variable</h1>
-<div id="classe-in-namessubtrain" class="section level2">
-<h2>“classe” %in% names(subTrain)</h2>
-</div>
-<div id="uniquesubtrainclasse-tablesubtrainclasse" class="section level2">
-<h2>unique(subTrain<span class="math inline">\(classe) ## table(subTrain\)</span>classe)</h2>
-</div>
-</div>
-<div id="leave-alone-for-prediction-later" class="section level1">
-<h1>Leave alone for prediction later</h1>
-<p>finalTesting &lt;- subTest[, 8:59]</p>
-<pre><code>
-## Data Slicing
+nearZeroTest &lt;- nearZeroVar(orgiTest)
+subTest &lt;- orgiTest[, -nearZeroTest]
 
-Perform cross-validation by partitioning the training data into 2 sets: training (60%) and testing (40%)
-```{r}
-inTrain &lt;- createDataPartition(y = subTrain$classe, p = 0.60, list = FALSE)
+# Remove columns that has NA&#39;s
+noNACol &lt;- colSums(is.na(subTrain)) == 0
+subTrain &lt;- subTrain[, noNACol]
+## dim(subTrain)
+
+noNAColTest &lt;- colSums(is.na(subTest)) == 0
+subTest &lt;- subTest[, noNAColTest]</code></pre>
+<pre><code>## [1] &quot;Irrelevant Variable: X&quot;                   
+## [2] &quot;Irrelevant Variable: user_name&quot;           
+## [3] &quot;Irrelevant Variable: raw_timestamp_part_1&quot;
+## [4] &quot;Irrelevant Variable: raw_timestamp_part_2&quot;
+## [5] &quot;Irrelevant Variable: cvtd_timestamp&quot;      
+## [6] &quot;Irrelevant Variable: new_window&quot;          
+## [7] &quot;Irrelevant Variable: num_window&quot;</code></pre>
+<pre class="r"><code>subTrain &lt;- subTrain[, 8:59]
+
+# Exploratory analysis on &#39;classe&#39; variable
+## &quot;classe&quot; %in% names(subTrain)
+## unique(subTrain$classe)
+## table(subTrain$classe)
+
+# Leave alone for prediction later
+finalTesting &lt;- subTest[, 8:59]</code></pre>
+</div>
+<div id="data-slicing" class="section level2">
+<h2>Data Slicing</h2>
+<p>Perform cross-validation by partitioning the training data into 2 sets: training (60%) and testing (40%)</p>
+<pre class="r"><code>inTrain &lt;- createDataPartition(y = subTrain$classe, p = 0.60, list = FALSE)
 training &lt;- subTrain[inTrain,]
-testing &lt;- subTrain[-inTrain,]
-</code></pre>
+testing &lt;- subTrain[-inTrain,]</code></pre>
+</div>
 <div id="predictions" class="section level2">
 <h2>Predictions</h2>
 <p>In this part, we’ll be building a prediction model with the tree and random forest algorithm and compare their prediction accuracy.</p>
 <div id="decision-tree" class="section level4">
 <h4>Decision Tree</h4>
-<pre class="{r}"><code>
-fitTree &lt;- train(classe ~ ., data = training, method = &quot;rpart&quot;)
+<pre class="r"><code>fitTree &lt;- train(classe ~ ., data = training, method = &quot;rpart&quot;)
 ## fancyRpartPlot(fitTree$finalModel)
 
 predictTree &lt;- predict(fitTree, newdata = testing)
 confusionMatrix(as.factor(testing$classe), predictTree)$overall[&quot;Accuracy&quot;]</code></pre>
+<pre><code>##  Accuracy 
+## 0.4908233</code></pre>
 <p>We find that <strong>accuracy is roughly 50%</strong>, which is not good enough for prediction. Since it is too low, we’ll focus on using an algorithm that provides a better accuracy. Random Forest will do the trick.</p>
 </div>
 <div id="random-forest" class="section level4">
 <h4>Random Forest</h4>
-<pre class="{r}"><code>fitRF &lt;- randomForest(as.factor(classe) ~., data = training)
+<pre class="r"><code>fitRF &lt;- randomForest(as.factor(classe) ~., data = training)
 predictRF &lt;- predict(fitRF, newdata = testing)
 confusionMatrix(as.factor(testing$classe), predictRF)$overall[&quot;Accuracy&quot;]</code></pre>
+<pre><code>##  Accuracy 
+## 0.9937548</code></pre>
 <p>Random Forest model has an <strong>accuracy of 99%</strong>.</p>
 </div>
 </div>
@@ -273,8 +279,11 @@ confusionMatrix(as.factor(testing$classe), predictRF)$overall[&quot;Accuracy&quo
 </div>
 <div id="prediction-with-test-data" class="section level2">
 <h2>Prediction with test data</h2>
-<p><code>{r prediction} predictTest &lt;- predict(fitRF, newdata = finalTesting) predictTest</code></p>
-</div>
+<pre class="r"><code>predictTest &lt;- predict(fitRF, newdata = finalTesting)
+predictTest</code></pre>
+<pre><code>##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
+##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
+## Levels: A B C D E</code></pre>
 </div>
 
 
