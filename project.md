@@ -1,12 +1,12 @@
 ---
-title: "PML Course Project"
+title: "PML Course Project" 
 author: "Aiyrui"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+
 
 ## Summary
 
@@ -21,7 +21,8 @@ The test data are available here:
 https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
 
 ## Setting up Environment
-```{r libraries, message=FALSE, warning=FALSE}
+
+```r
 library(caret)
 library(randomForest)
 library(rpart)
@@ -34,7 +35,8 @@ set.seed(32343)
 ## Data Processing and Cleansing
 
 Downloading the necessary data sets into working directory and assigned to their appropriate files and objects.
-```{r download}
+
+```r
 if(!file.exists("trainingSet.csv")){
     urlTrain <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
     filename <- "trainingSet.csv"
@@ -54,11 +56,11 @@ if(!exists("orgiTrain")){
 if(!exists("orgiTest")){
     orgiTest <- read.csv("testingSet.csv", na.strings = c("", "NA", "#DIV/0!"))
 }
-
 ```
 
 We'll be removing variables that has zero covariates, NA's, and irrelevant variables (first 7).
-```{r cleansing}
+
+```r
 # Remove variables that has near zero covariates
 nearZero <- nearZeroVar(orgiTrain)
 subTrain <- orgiTrain[, -nearZero]
@@ -73,16 +75,21 @@ subTrain <- subTrain[, noNACol]
 
 noNAColTest <- colSums(is.na(subTest)) == 0
 subTest <- subTest[, noNAColTest]
-
 ```
 
-```{r, echo=FALSE}
-
-paste("Irrelevant Variable:", names(orgiTrain)[1:7])
 
 ```
+## [1] "Irrelevant Variable: X"                   
+## [2] "Irrelevant Variable: user_name"           
+## [3] "Irrelevant Variable: raw_timestamp_part_1"
+## [4] "Irrelevant Variable: raw_timestamp_part_2"
+## [5] "Irrelevant Variable: cvtd_timestamp"      
+## [6] "Irrelevant Variable: new_window"          
+## [7] "Irrelevant Variable: num_window"
+```
 
-```{r subset}
+
+```r
 subTrain <- subTrain[, 8:59]
 
 # Exploratory analysis on 'classe' variable
@@ -92,17 +99,16 @@ subTrain <- subTrain[, 8:59]
 
 # Leave alone for prediction later
 finalTesting <- subTest[, 8:59]
-
 ```
 
 ## Data Slicing
 
 Perform cross-validation by partitioning the training data into 2 sets: training (60%) and testing (40%)
-```{r}
+
+```r
 inTrain <- createDataPartition(y = subTrain$classe, p = 0.60, list = FALSE)
 training <- subTrain[inTrain,]
 testing <- subTrain[-inTrain,]
-
 ```
 
 
@@ -111,8 +117,8 @@ testing <- subTrain[-inTrain,]
 In this part, we'll be building a prediction model with the tree and random forest algorithm and compare their prediction accuracy.
 
 #### Decision Tree
-```{r}
 
+```r
 fitTree <- train(classe ~ ., data = training, method = "rpart")
 ## fancyRpartPlot(fitTree$finalModel)
 
@@ -120,13 +126,24 @@ predictTree <- predict(fitTree, newdata = testing)
 confusionMatrix(as.factor(testing$classe), predictTree)$overall["Accuracy"]
 ```
 
+```
+##  Accuracy 
+## 0.4908233
+```
+
 We find that **accuracy is roughly 50%**, which is not good enough for prediction. Since it is too low, we'll focus on using an algorithm that provides a better accuracy. Random Forest will do the trick.
 
 #### Random Forest
-```{r}
+
+```r
 fitRF <- randomForest(as.factor(classe) ~., data = training)
 predictRF <- predict(fitRF, newdata = testing)
 confusionMatrix(as.factor(testing$classe), predictRF)$overall["Accuracy"]
+```
+
+```
+##  Accuracy 
+## 0.9937548
 ```
 
 Random Forest model has an **accuracy of 99%**.
@@ -136,7 +153,14 @@ Random Forest model has an **accuracy of 99%**.
 Predicting with random forest has an accuracy of approximately 99% so we'll use the Random Forest algorithm for prediction with testing set. Accuracy is the proportion of correctly classified observations in the training set, then 1 - Accuracy = error rate. We can assume that they're the expected accuracy and out of sample error in the test data. Therefore, 1 - Expected Accuracy = Expected Out of Sample Error, In the case of our prediction model with Random Forest, the **expected out of sample error is 1%**.
 
 ## Prediction with test data
-```{r prediction}
+
+```r
 predictTest <- predict(fitRF, newdata = finalTesting)
 predictTest
+```
+
+```
+##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
+##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
+## Levels: A B C D E
 ```
