@@ -184,7 +184,10 @@ pre code {
 <pre class="r"><code>library(caret)
 library(randomForest)
 library(rpart)
-library(rattle)</code></pre>
+library(rattle)
+
+# Set seed
+set.seed(32343)</code></pre>
 </div>
 <div id="data-processing-and-cleansing" class="section level2">
 <h2>Data Processing and Cleansing</h2>
@@ -252,16 +255,13 @@ testing &lt;- subTrain[-inTrain,]</code></pre>
 <p>In this part, we’ll be building a prediction model with the tree and random forest algorithm and compare their prediction accuracy.</p>
 <div id="decision-tree" class="section level4">
 <h4>Decision Tree</h4>
-<pre class="r"><code># Set seed
-set.seed(32343)
-
-fitTree &lt;- train(classe ~ ., data = training, method = &quot;rpart&quot;)
+<pre class="r"><code>fitTree &lt;- train(classe ~ ., data = training, method = &quot;rpart&quot;)
 ## fancyRpartPlot(fitTree$finalModel)
 
 predictTree &lt;- predict(fitTree, newdata = testing)
 confusionMatrix(as.factor(testing$classe), predictTree)$overall[&quot;Accuracy&quot;]</code></pre>
 <pre><code>##  Accuracy 
-## 0.4869997</code></pre>
+## 0.4908233</code></pre>
 <p>We find that <strong>accuracy is roughly 50%</strong>, which is not good enough for prediction. Since it is too low, we’ll focus on using an algorithm that provides a better accuracy. Random Forest will do the trick.</p>
 </div>
 <div id="random-forest" class="section level4">
@@ -270,7 +270,7 @@ confusionMatrix(as.factor(testing$classe), predictTree)$overall[&quot;Accuracy&q
 predictRF &lt;- predict(fitRF, newdata = testing)
 confusionMatrix(as.factor(testing$classe), predictRF)$overall[&quot;Accuracy&quot;]</code></pre>
 <pre><code>##  Accuracy 
-## 0.9931175</code></pre>
+## 0.9937548</code></pre>
 <p>Random Forest model has an <strong>accuracy of 99%</strong>.</p>
 </div>
 </div>
